@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<bean id="servicePublisher" class="com.appchina.rpc.thrift.remote.base.ThriftServicePublisher">
+		<property name="definitions">
+			<array>
+				<bean class="com.appchina.rpc.remote.ServiceDefinition">
+					<property name="serviceName" value="AddService"></property>
+					<property name="interfaceClass" value="com.appchina.rpc.test.api.AddService"></property>
+					<property name="implInstance">
+						<bean class="com.appchina.rpc.test.impl.AddServiceImpl" />
+					</property>
+				</bean>
+				<bean class="com.appchina.rpc.remote.ServiceDefinition">
+					<property name="serviceName" value="OtherAddService"></property>
+					<property name="interfaceClass" value="com.appchina.rpc.test.api.AddService"></property>
+					<property name="implInstance">
+						<bean class="com.appchina.rpc.test.impl.OhterAddServiceImpl" />
+					</property>
+				</bean>
+				<bean class="com.appchina.rpc.remote.ServiceDefinition">
+					<property name="serviceName" value="MoodService"></property>
+					<property name="interfaceClass" value="com.appchina.rpc.test.api.MoodService"></property>
+					<property name="implInstance">
+						<bean class="com.appchina.rpc.test.impl.MoodServiceImpl" />
+					</property>
+				</bean>
+			</array>
+		</property>
+		<property name="messageConvert">
+			<bean class="com.appchina.rpc.thrift.remote.ThriftMessageConvert">
+				<property name="serializer">
+					<bean class="com.appchina.rpc.thrift.remote.KryoSerializer"></bean>
+				</property>
+			</bean>
+		</property>
+	</bean>
+
+	<bean class="com.appchina.rpc.thrift.server.ThriftThreadPoolServer">
+		<property name="processor" ref="servicePublisher"></property>
+		<property name="port" value="9090"></property>
+		<property name="minWorkerThreads" value="100"></property>
+		<property name="workerThreads" value="500"></property>
+		<property name="security" value="true"></property>
+		<property name="stopTimeoutVal" value="3000"></property>
+		<property name="clientTimeout" value="10000"></property>
+		<property name="allowedFromTokens">
+			<map>
+				<entry key="DONGJIAN" value="DSIksduiKIOYUIOkYIOhIOUIOhjklYUI"></entry>
+			</map>
+		</property>
+		<property name="protocolFactory">
+			<bean class="org.apache.thrift.protocol.TTupleProtocol.Factory"></bean>
+		</property>
+	</bean>
+
+	<bean class="com.appchina.rpc.thrift.server.ThriftThreadPoolServer">
+		<property name="processor" ref="servicePublisher"></property>
+		<property name="port" value="9191"></property>
+		<property name="minWorkerThreads" value="100"></property>
+		<property name="workerThreads" value="500"></property>
+		<property name="security" value="false"></property>
+		<property name="stopTimeoutVal" value="3000"></property>
+	</bean>
+	
+</beans>

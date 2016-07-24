@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<!-- 关于Client的相关配置 -->
+	<bean id="factoryProvider" class="com.appchina.rpc.thrift.cluster.ThriftClientFactoryProvider">
+		<property name="hostPorts">
+			<list>
+				<value>127.0.0.1:9090</value>
+				<value>127.0.0.1:9191</value>
+			</list>
+		</property>
+		<!-- 请求超时，根据业务设置 -->
+		<property name="timeout" value="60000"></property>
+		<!-- 连接超时，超过这个时间无法创建连接的连接池将被设置为暂时无效   -->
+		<property name="connectionTimeout" value="10000"></property>
+		<!-- 如果服务端是NIO，需要启用此配置 -->
+		<property name="framed" value="false"></property>
+		<!-- 可选协议，但默认的更好 -->
+		<property name="protocolFactory">
+			<bean class="org.apache.thrift.protocol.TTupleProtocol.Factory"></bean>
+		</property>
+		<!-- 安全选项 -->
+		<property name="from" value="DONGJIAN"></property>
+		<property name="token" value="DSIksduiKIOYUIOkYIOhIOUIOhjklYUI"></property>
+	</bean>
+	
+	<!-- 关于集群的相关配置 -->
+	<bean id="client" class="com.appchina.rpc.base.cluster.client.DistributeClient">
+		<property name="factoryProvider" ref="factoryProvider"></property>
+		<!-- 负载均衡实现类 -->
+		<property name="loadBalance">
+			<bean class="com.appchina.rpc.base.cluster.RoundrobinLoadBalance"></bean>
+		</property>
+		<!-- 心跳频率 -->
+		<property name="heartbeat" value="1000"></property>
+		<!-- 处理心跳的最大线程数 -->
+		<property name="maxHeartbeatThread" value="1"></property>
+		<!-- 连接池耗完直接重试，重试其他池子的次数，因此、maxWait的时间可能叠加 -->
+		<property name="retry" value="3"></property>
+		<!-- 由于被借走时间不一样，可能导致单个池子不够用，建议这个值大一些，可以通过maxIdle来限制长连接数量 -->
+		<property name="maxActive" value="300"></property>
+		<!-- 最大空闲，当池内连接大于maxIdle，每次returnObject都会销毁连接，maxIdle保证了长连接的数量 -->
+		<property name="maxIdle" value="200"></property>
+		<!-- 最小空闲 -->
+		<property name="minIdle" value="5"></property>
+		<!-- 等待连接池的时间 -->
+		<property name="maxWait" value="1000"></property>
+		<!-- 连接使用多久之后被销毁 -->
+		<property name="maxKeepMillis" value="-1"></property>
+		<!-- 连接使用多少次之后被销毁 -->
+		<property name="maxSendCount" value="-1"></property>
+
+	</bean>
+	
+	<bean id="addService" class="com.appchina.rpc.thrift.remote.base.ThriftRemoteProxyFactory">
+		<property name="serviceName" value="AddService"></property>
+		<property name="proxyInterface" value="com.appchina.rpc.test.api.AddService"></property>
+		<property name="client" ref="client"></property>
+	</bean>
+	
+	<bean id="otherAddService" class="com.appchina.rpc.thrift.remote.base.ThriftRemoteProxyFactory">
+		<property name="serviceName" value="OtherAddService"></property>
+		<property name="proxyInterface" value="com.appchina.rpc.test.api.AddService"></property>
+		<property name="client" ref="client"></property>
+	</bean>
+	
+	<bean id="moodService" class="com.appchina.rpc.thrift.remote.base.ThriftRemoteProxyFactory">
+		<property name="serviceName" value="MoodService"></property>
+		<property name="proxyInterface" value="com.appchina.rpc.test.api.MoodService"></property>
+		<property name="client" ref="client"></property>
+		<property name="messageConvert">
+			<bean class="com.appchina.rpc.thrift.remote.ThriftMessageConvert">
+				<property name="serializer">
+					<bean class="com.appchina.rpc.thrift.remote.KryoSerializer"></bean>
+				</property>
+			</bean>
+		</property>
+		
+	</bean>
+	
+</beans>
