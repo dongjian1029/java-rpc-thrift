@@ -31,20 +31,21 @@
 
 <p>心血来潮，在公司很无聊，这才是主要原因。
 其次是我们要对系统模块进行拆分，从原系统移出，那么就需要寻找一个远程调用工具。
-  1、基于HTTP（rest、webservice等） 性能很差，难以支持高并发，而且组装HTTP请求也比较麻烦，加上我们对性能要求高，所以此项被pass
-  2、基于thrift，性能虽好，但是使用起来非常麻烦，需要频繁的生成代码，而且对Client开发者要求较高，需要自己写连接池。而且thrift的服务端需要将业务逻辑全部放在一个接口（一个接口就需要发布一个服务，占用一个线程池），这将是个很恶心的事，所以也被pass</p>
+  1、基于HTTP（rest、webservice等） 性能很差，难以支持高并发，而且组装HTTP请求也比较麻烦，加上我们对性能要求高，所以此项被pass。
+  2、基于thrift，性能虽好，但是使用起来非常麻烦，需要频繁的生成代码，而且对Client开发者要求较高，需要自己写连接池。而且thrift的服务端需要将业务逻辑全部放在一个接口（一个接口就需要发布一个服务，占用一个线程池），这将是个很恶心的事，所以也被pass。</p>
 
-<p>正因为以上两点，所以我打算自己写一个框架。要求是：简单，小巧，依赖少，高性能，高并发。无学习成本，源码简单可定制修改。</p>
+<p>正因为以上两点，所以我打算自己写一个框架。要求是：简单，小巧，依赖少，高性能，高并发，支持集群，轮询，容错。无学习成本，源码简单可定制修改，我认为这些才是最主要的。</p>
 
 <p>如果你也在寻找这样一个框架，那么很值得看一下。</p>
 
 <h3>
 <a id="框架详解" class="anchor" href="#%E6%A1%86%E6%9E%B6%E8%AF%A6%E8%A7%A3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>框架详解</h3>
 
-<p>我做完了这个框架，没多久便发现了Dubbo，在看了Dubbo的设计以后，惊喜的发现此框架和Dubbo的核心功能几乎一样。
-说起来很简单，就是在Client端代理一个接口，用户调用这个接口的方法，将进行远程调用，参数传递到远程Server端，Server端处理并且将数据返回给Client，作为方法的返回值，这一切都对用户透明的。</p>
+<p>我做完了这个框架，没多久便发现了Dubbo，在看了Dubbo的设计以后，惊喜的发现此框架和Dubbo的核心功能几乎一样。</p>
 
-<p>项目底层使用thrift，这是为了使用thrift的各种Server模型，以此来支持高并发，低延迟。没有使用Netty，原因是Netty较重，延迟要比thrift稍高一些，Netty适合处理高吞吐的异步IO，对于RPC的同步调用。综合起来看，Netty并不适合。您不用担心thrift性能有问题，也不用担心thrift框架太重，我做过测试，性能和直接使用soket通信几乎不相上下，thrift框架的代码特别少，仅仅是对soket的简单封装，框架非常轻便。</p>
+<p>说起来很简单，就是框架会在Client端代理一个接口，调用这个接口的方法，将发送远程请求，参数序列化传递到远程Server端，Server端处理业务逻辑，完成后、将返回结果序列化给Client端，作为被调用方法的返回值。因此整个过程对用户是透明的。</p>
+
+<p>项目底层使用thrift，这是为了使用thrift的各种Server模型，以此来支持高并发，低延迟。没有使用Netty，原因是Netty较重，延迟要比thrift稍高一些，Netty适合处理高吞吐的异步IO，对于RPC的同步调用没有好处。Netty并不适合。您不用担心thrift性能有问题，也不用担心thrift框架太重，我做过测试，性能和直接使用soket通信几乎不相上下，thrift框架的代码特别少，仅仅是对soket的简单封装，框架非常轻便。</p>
 
 <p>序列化工具使用kryo，这也是性能的关键，您也可以自己去查一下kryo相关资料，这里就不说他了，序列化结果很小，速度很快就是了。</p>
 
@@ -55,14 +56,119 @@
 <p>线程模型 以ThriftThreadPoolServer、ThriftTThreadedSelectorServer 两种为主，具体细节参考thrift（您也可以自己实现Server）</p>
 
 <h3>
-<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<a id="使用例子" class="anchor" href="#%E4%BD%BF%E7%94%A8%E4%BE%8B%E5%AD%90" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>使用例子</h3>
 
-<p>You can <a href="https://help.github.com/articles/basic-writing-and-formatting-syntax/#mentioning-users-and-teams" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor’s GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>服务端：<br>
+/appchina-rpc-test/src/main/java/main/Server.java  </p>
+
+<p><code>ConfigurableApplicationContext ctx = new ClassPathXmlApplicationContext("/application-server.xml");</code><br>
+<code>ctx.registerShutdownHook();</code><br>
+<code>ctx.start();</code>   </p>
+
+<p>/appchina-rpc-test/src/main/resources/application-server.xml   </p>
+
+<pre><code>&lt;bean id="servicePublisher" class="com.appchina.rpc.thrift.remote.base.ThriftServicePublisher"&gt;
+    &lt;property name="definitions"&gt;
+        &lt;!-- 需要发布的服务列表 --&gt;
+        &lt;array&gt;
+            &lt;!-- ServiceDefinition 定义了服务的信息 --&gt;
+            &lt;bean class="com.appchina.rpc.remote.ServiceDefinition"&gt;
+                &lt;!-- 可选，用于区分不同实现类 --&gt;
+                &lt;property name="serviceName" value="addServiceImpl"&gt;&lt;/property&gt;
+                &lt;!-- 发布服务的接口 --&gt;
+                &lt;property name="interfaceClass" value="com.appchina.rpc.test.api.AddService"&gt;&lt;/property&gt;
+                &lt;!-- 发布服务实现类 --&gt;
+                &lt;property name="implInstance"&gt;
+                    &lt;bean class="com.appchina.rpc.test.impl.AddServiceImpl" /&gt;
+                &lt;/property&gt;
+            &lt;/bean&gt; 
+        &lt;/array&gt;
+    &lt;/property&gt; 
+&lt;/bean&gt;  
+
+&lt;bean class="com.appchina.rpc.thrift.server.ThriftThreadPoolServer"&gt;
+    &lt;property name="processor" ref="servicePublisher"&gt;&lt;/property&gt;
+    &lt;property name="port" value="9090"&gt;&lt;/property&gt;
+    &lt;property name="minWorkerThreads" value="100"&gt;&lt;/property&gt;
+    &lt;property name="workerThreads" value="500"&gt;&lt;/property&gt;
+    &lt;property name="security" value="true"&gt;&lt;/property&gt;
+    &lt;property name="stopTimeoutVal" value="3000"&gt;&lt;/property&gt;
+    &lt;property name="clientTimeout" value="10000"&gt;&lt;/property&gt;
+    &lt;property name="allowedFromTokens"&gt;
+        &lt;map&gt;
+            &lt;entry key="DONGJIAN" value="DSIksduiKIOYUIOkYIOhIOUIOhjklYUI"&gt;&lt;/entry&gt;
+        &lt;/map&gt;
+    &lt;/property&gt;
+&lt;/bean&gt; 
+</code></pre>
+
+<p>客户端：<br>
+/appchina-rpc-test/src/main/java/main/Client.java  </p>
+
+<p><code>ConfigurableApplicationContext ctx = new ClassPathXmlApplicationContext("/application-client.xml");</code><br>
+<code>AddService addService = (AddService) ctx.getBean("addService");</code><br>
+<code>addService.add(100);</code>    </p>
+
+<p>/appchina-rpc-test/src/main/resources/application-client.xml</p>
+
+<pre><code>&lt;bean id="factoryProvider" class="com.appchina.rpc.thrift.cluster.ThriftClientFactoryProvider"&gt;    
+    &lt;!-- server列表 --&gt;       
+    &lt;property name="hostPorts"&gt; 
+        &lt;list&gt;                   
+            &lt;value&gt;127.0.0.1:9090&lt;/value&gt;                
+            &lt;value&gt;127.0.0.1:9191&lt;/value&gt;
+        &lt;/list&gt;
+    &lt;/property&gt;
+    &lt;!-- 请求超时，根据业务设置 --&gt;
+    &lt;property name="timeout" value="60000"&gt;&lt;/property&gt;
+    &lt;!-- 连接超时，超过这个时间无法创建连接的server将被设置为暂时无效，恢复时设置为有效   --&gt;
+    &lt;property name="connectionTimeout" value="10000"&gt;&lt;/property&gt;
+    &lt;!-- 如果服务端是NIO，需要启用此配置 --&gt;
+    &lt;property name="framed" value="false"&gt;&lt;/property&gt;
+    &lt;!-- 安全选项 --&gt;
+    &lt;property name="from" value="DONGJIAN"&gt;&lt;/property&gt;
+    &lt;property name="token" value="DSIksduiKIOYUIOkYIOhIOUIOhjklYUI"&gt;&lt;/property&gt;
+&lt;/bean&gt;
+
+
+&lt;!-- 关于集群的相关配置 --&gt;   
+&lt;bean id="client" class="com.appchina.rpc.base.cluster.client.DistributeClient"&gt;   
+    &lt;property name="factoryProvider" ref="factoryProvider"&gt;&lt;/property&gt;   
+    &lt;!-- 负载均衡实现类 --&gt;   
+    &lt;property name="loadBalance"&gt;   
+        &lt;bean class="com.appchina.rpc.base.cluster.RoundrobinLoadBalance"&gt;&lt;/bean&gt;   
+    &lt;/property&gt;   
+    &lt;!-- 心跳频率，用于检测Server可用性的间隔 --&gt;  
+    &lt;property name="heartbeat" value="1000"&gt;&lt;/property&gt;   
+    &lt;!-- 处理心跳的最大线程数，一般1个线程足够 --&gt;   
+    &lt;property name="maxHeartbeatThread" value="1"&gt;&lt;/property&gt;   
+    &lt;!-- 连接池耗完直接重试，重试其他池子的次数，因此、maxWait的时间可能叠加 --&gt;   
+    &lt;property name="retry" value="3"&gt;&lt;/property&gt;                 
+    &lt;!-- 由于被借走时间不一样，可能导致单个池子不够用，建议这个值大一些，可以通过maxIdle来限制长连接数量 --&gt;                          
+    &lt;property name="maxActive" value="300"&gt;&lt;/property&gt;                  
+    &lt;!-- 最大空闲，当池内连接大于maxIdle，每次returnObject都会销毁连接，maxIdle保证了长连接的数量 --&gt;                  
+    &lt;property name="maxIdle" value="200"&gt;&lt;/property&gt;                
+    &lt;!-- 最小空闲 --&gt;              
+    &lt;property name="minIdle" value="5"&gt;&lt;/property&gt;                  
+    &lt;!-- 等待连接池的时间 --&gt;                
+    &lt;property name="maxWait" value="1000"&gt;&lt;/property&gt;                   
+    &lt;!-- 连接使用多久之后被销毁 --&gt;               
+    &lt;property name="maxKeepMillis" value="-1"&gt;&lt;/property&gt;                  
+    &lt;!-- 连接使用多少次之后被销毁 --&gt;                  
+    &lt;property name="maxSendCount" value="-1"&gt;&lt;/property&gt;                  
+&lt;/bean&gt; 
+
+&lt;bean id="addService" class="com.appchina.rpc.thrift.remote.base.ThriftRemoteProxyFactory"&gt;  
+    &lt;property name="serviceName" value="AddService"&gt;&lt;/property&gt;     
+    &lt;property name="proxyInterface" value="com.appchina.rpc.test.api.AddService"&gt;&lt;/property&gt;
+    &lt;property name="client" ref="client"&gt;&lt;/property&gt;        
+&lt;/bean&gt;      
+</code></pre>
 
 <h3>
 <a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Support or Contact</h3>
 
-<p>Having trouble with Pages? Check out our <a href="https://help.github.com/pages">documentation</a> or <a href="https://github.com/contact">contact support</a> and we’ll help you sort it out.</p>
+<p>QQ:343310877     </p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/dongjian1029/java-rpc-thrift">Java-rpc-thrift</a> is maintained by <a href="https://github.com/dongjian1029">dongjian1029</a>.</span>
