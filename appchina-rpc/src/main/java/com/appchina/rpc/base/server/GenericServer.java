@@ -7,9 +7,9 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.Ordered;
 
 /**
- * 封装通用代码，用于继承。<br>
+ * 封装通用代码，用于继承，此类定义了一个通用的server模板。<br>
  * <br>
- * 任何子类，都需要将请求转交给{@link #doServerProcess(Object)} 进行处理
+ * 任何子类，都需要将请求转交给{@link #doServerProcess(Object)} 进行处理。
  * <br>
  * @author dongjian_9@163.com
  * */
@@ -29,7 +29,7 @@ public abstract class GenericServer<P, R> implements Server, InitializingBean, D
 	}
 	
 	/**
-	 * 将请求交给 {@link ServerProcessor}
+	 * 将请求交给 {@link ServerProcessor} 进行处理。
 	 * 
 	 * @throws Throwable 未知异常
 	 * */

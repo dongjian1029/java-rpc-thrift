@@ -18,31 +18,31 @@ public interface Client<P, R> extends Closeable {
 	public void open() throws ClientIOException;
 
 	/**
-	 * @return 调用{@link #open()}的时间戳
+	 * @return 打开连接成功时，记录的时间戳。
 	 */
 	public long openTimestamp();
 
 	/**
 	 * 测试可用性
 	 * 
-	 * @return true表示可用，false表示不可用
+	 * @return true表示可用，false表示不可用。
 	 */
 	public boolean ping();
 
 	/**
-	 * 发送请求，并获得返回值。
+	 * 发送请求数据到服务端，并获得服务端返回数据。
 	 * 
 	 * @throws ClientIOException
-	 *             网络问题
+	 *             网络异常
 	 * @throws RemoteException
-	 *             远程服务器发生了异常
+	 *             远程服务器抛出了异常
 	 */
 	public R send(P param) throws ClientIOException, RemoteException;
 
 	/**
-	 * 调用{@link #send(Object)} 方法的次数
+	 * 调用{@link #send(Object)}发送请求的次数
 	 * 
-	 * @return 从连接被打开，到当前时间调用send方法的次数
+	 * @return 从连接被打开，到当前时间调用send方法的次数。
 	 */
 	public long sendCount();
 	
@@ -53,7 +53,7 @@ public interface Client<P, R> extends Closeable {
 	public void close();
 	
 	/**
-	 * 是否调用过close方法
+	 * 连接是否已关闭
 	 */
 	public boolean closed();
 	

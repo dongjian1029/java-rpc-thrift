@@ -1,7 +1,7 @@
 package com.appchina.rpc.base.server;
 
 /**
- * 处理器的标准接口，{@link GenericServer}接到的任何请求都由此类处理。
+ * 服务端处理器的标准接口，{@link GenericServer} 接到的任何请求都由此类处理，处理具体的业务逻辑。
  * 
  * @author dongjian_9@163.com
  */
@@ -12,7 +12,7 @@ public interface ServerProcessor<P, R> {
 	 * 
 	 * @return 将要返回给客户端的数据，包括异常信息。
 	 * 
-	 * @throws Throwable 未知异常
+	 * @throws Throwable 未知异常（不建议抛出异常）
 	 */
 	public abstract R process(P param) throws Throwable;
 

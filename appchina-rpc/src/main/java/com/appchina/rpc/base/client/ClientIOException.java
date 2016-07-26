@@ -1,7 +1,7 @@
 package com.appchina.rpc.base.client;
 
 /**
- * 表示网络异常
+ * 表示网络异常，这是对{@link IOException}的包装。
  * 
  * @author dongjian_9@163.com
  * */

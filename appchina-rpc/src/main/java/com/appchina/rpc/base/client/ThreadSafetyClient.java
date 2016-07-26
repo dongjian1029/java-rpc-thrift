@@ -12,7 +12,7 @@ public interface ThreadSafetyClient<P, R> {
 	 * 
 	 * @throws ClientIOException
 	 *             网络异常
-	 * @throws RemoteException 服务器发生了异常
+	 * @throws RemoteException 服务器抛出了异常
 	 */
 	public R send(P param) throws ClientIOException, RemoteException;
 
