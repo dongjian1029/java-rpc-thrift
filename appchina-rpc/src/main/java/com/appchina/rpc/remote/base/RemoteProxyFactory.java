@@ -109,7 +109,9 @@ public class RemoteProxyFactory<T, P, R> implements FactoryBean<T> {
 			return messageConvert.readReturn(result);
 		} catch (RemoteInvocationException e) {
 			//保证抛出原始异常
-			throw e.getTargetException();
+			Throwable targetException = e.getTargetException();
+			targetException.addSuppressed(new Exception());
+			throw targetException;
 		} catch (Throwable e) {
 			//当接口被调用，而实例是个代理，代理之中跑出了接口未定义的异常时，JVM会将这种未定义的异常信息包装为超级丑的 UndeclaredThrowableException。
 			//这些都是框架异常，不影响上层异常。
