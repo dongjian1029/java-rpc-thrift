@@ -31,9 +31,9 @@
 ## 使用例子
 
 ### 服务端：
-/appchina-rpc-test/src/main/java/main/Server.java
+/appchina-rpc-test/src/main/java/main/Server.java  
 /appchina-rpc-test/src/main/resources/application-server.xml
 
 ### 客户端：
-/appchina-rpc-test/src/main/java/main/Client.java
+/appchina-rpc-test/src/main/java/main/Client.java  
 /appchina-rpc-test/src/main/resources/application-client.xml
